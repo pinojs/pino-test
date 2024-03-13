@@ -1,6 +1,6 @@
 {
   "name": "pino-test",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A set of API to easily test the Pino logger",
   "main": "pino-test.js",
   "type": "commonjs",
