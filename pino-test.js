@@ -106,6 +106,10 @@ async function consecutive (stream, expected, assert = nodeAssert.deepStrictEqua
     i++
     if (i === expected.length) break
   }
+
+  if (i < expected.length) {
+    throw new Error('Stream ended before all expected logs were received')
+  }
 }
 
 module.exports = { sink, once, consecutive }

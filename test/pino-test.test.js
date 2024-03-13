@@ -230,8 +230,22 @@ test('consecutive should rejects with assert diff error and own assert function'
     { msg: 'by world', level: 30 }
   ]
 
-  assert.rejects(
+  await assert.rejects(
     pinoTest.consecutive(stream, expected, is),
     new Error('expected msg by world doesn\'t match the received one hi world')
   )
+})
+
+test('consecutive should reject if the stream ended before matching all logs', async () => {
+  const stream = pinoTest.sink()
+  const instance = pino(stream)
+
+  instance.info('hello world')
+
+  const expected = [
+    { msg: 'hello world', level: 30 },
+    { msg: 'hi world', level: 30 }
+  ]
+  stream.end()
+  await assert.rejects(pinoTest.consecutive(stream, expected), new Error('Stream ended before all expected logs were received'))
 })
