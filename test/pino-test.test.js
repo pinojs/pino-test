@@ -115,7 +115,7 @@ describe('once', () => {
     await pinoTest.once(stream, expected, is)
   })
 
-  test('once should own assert function called once', async () => {
+  test('once should calls own assert function once', async () => {
     const stream = pinoTest.sink()
     const instance = pino(stream)
     const customAssertFunction = mock.fn(is)
@@ -217,7 +217,7 @@ describe('consecutive', () => {
     await pinoTest.consecutive(stream, expected, is)
   })
 
-  test('consecutive should own assert function called twice', async () => {
+  test('consecutive should calls the own assert function twice', async () => {
     const stream = pinoTest.sink()
     const instance = pino(stream)
     const customAssertFunction = mock.fn(is)
