@@ -38,9 +38,9 @@ function sink ({ destroyOnError = false, emitErrorEvent = false } = {}) {
 function check (chunk, expected, assert) {
   const { time, pid, hostname, ...chunkCopy } = chunk
 
-  assert(new Date(time) <= new Date(), true, 'time is greater than Date.now()')
-  assert(pid, process.pid)
-  assert(hostname, os.hostname())
+  nodeAssert.strictEqual(new Date(time) <= new Date(), true, 'time is greater than Date.now()')
+  nodeAssert.strictEqual(pid, process.pid)
+  nodeAssert.strictEqual(hostname, os.hostname())
   assert(chunkCopy, expected)
 }
 

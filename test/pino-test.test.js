@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('node:test')
+const { mock, test } = require('node:test')
 const assert = require('node:assert')
 const { once } = require('node:events')
 const pino = require('pino')
@@ -112,6 +112,18 @@ test('once should pass with own assert function', async () => {
   await pinoTest.once(stream, expected, is)
 })
 
+test('once should own assert function called once', async () => {
+  const stream = pinoTest.sink()
+  const instance = pino(stream)
+  const customAssertFunction = mock.fn(is)
+
+  instance.info('hello world')
+
+  const expected = { msg: 'hello world', level: 30 }
+  await pinoTest.once(stream, expected, customAssertFunction)
+  assert.strictEqual(customAssertFunction.mock.calls.length, 1)
+})
+
 test('once should rejects with assert diff error', async ({ rejects }) => {
   const stream = pinoTest.sink()
   const instance = pino(stream)
@@ -198,6 +210,22 @@ test('consecutive should pass with own assert function', async () => {
     { msg: 'hi world', level: 30 }
   ]
   await pinoTest.consecutive(stream, expected, is)
+})
+
+test('consecutive should own assert function called twice', async () => {
+  const stream = pinoTest.sink()
+  const instance = pino(stream)
+  const customAssertFunction = mock.fn(is)
+
+  instance.info('hello world')
+  instance.info('hi world')
+
+  const expected = [
+    { msg: 'hello world', level: 30 },
+    { msg: 'hi world', level: 30 }
+  ]
+  await pinoTest.consecutive(stream, expected, customAssertFunction)
+  assert.strictEqual(customAssertFunction.mock.calls.length, 2)
 })
 
 test('consecutive should rejects with assert diff error', async () => {
