@@ -7,10 +7,11 @@
   "types": "pino-test.d.ts",
   "scripts": {
     "lint": "eslint .",
-    "test": "npm run lint && node --experimental-test-coverage --test-reporter=spec --test **/*.test.js && npm run test-types",
-    "test-ci": "npm run lint && node --experimental-test-coverage --test-reporter=lcov --test **/*.test.js && npm run test-types",
-    "test-ci-pnpm": "pnpm run lint && node --experimental-test-coverage --test-reporter=lcov --test **/*.test.js && pnpm run test-types",
-    "test-ci-yarn-pnp": "yarn run lint && node --experimental-test-coverage --test-reporter=lcov --test **/*.test.js",
+    "test": "npm run lint && node --test **/*.test.js && npm run test-types",
+    "test-coverage": "npm run lint && node --experimental-test-coverage --test-reporter=spec --test **/*.test.js && npm run test-types",
+    "test-ci": "npm run lint && node --test **/*.test.js && npm run test-types",
+    "test-ci-pnpm": "pnpm run lint && node --test **/*.test.js && pnpm run test-types",
+    "test-ci-yarn-pnp": "yarn run lint && node --test **/*.test.js",
     "test-types": "tsc && tsd && ts-node test/types/pino-test.ts"
   },
   "precommit": "test",
