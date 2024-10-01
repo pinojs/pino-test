@@ -16,42 +16,54 @@ declare function sink({ destroyOnError, emitErrorEvent }?: { destroyOnError?: bo
  * Assert that a single log is expected.
  *
  * @param {Transform} stream The stream to be tested.
- * @param {object} expected The expected value to be tested.
- * @param {function} [assert=deepStrictEqual] The assert function to be used.
+ * @param {object | Function} expectedOrCallback The expected value to be tested or a callback function to assert the log.
+ * @param {Function} [assert=deepStrictEqual] The assert function to be used when the expectedOrCallback parameter is an object.
  *
  * @returns A promise that resolves when the expected value is equal to the stream value.
  * @throws If the expected value is not equal to the stream value.
+ * @throws If the the callback function throws an error.
  *
  * @example
- * const stream = pino.test.sink()
+ * const stream = pinoTest.sink()
  * const logger = pino(stream)
+ * 
  * logger.info('hello world')
+ * 
  * const expected = { msg: 'hello world', level: 30 }
- * await pino.test.once(stream, expected)
+ * await pinoTest.once(stream, expected)
+ * 
+ * logger.info('hello world 1')
+ * 
+ * await pinoTest.once(stream, (log) => {
+ *  assert.strictEqual(log.msg, 'hello world 1')
+ * })
  */
-declare function once(stream: Transform, expected: object, assert?: typeof deepStrictEqual): Promise<void>
+declare function once(stream: Transform, expectedOrCallback: object | Function, assert?: typeof deepStrictEqual): Promise<void>
 
 /**
  * Assert that consecutive logs are expected.
  *
  * @param {Transform} stream The stream to be tested.
- * @param {object} expected The expected value to be tested.
- * @param {function} [assert=deepStrictEqual] The assert function to be used.
+ * @param {Array<object | Function>} expectedsOrCallbacks The array of expected values to be tested or callback functions.
+ * @param {Function} [assert=deepStrictEqual] The assert function to be used when the expectedOrCallback parameter is an object.
  *
  * @returns A promise that resolves when the expected value is equal to the stream value.
  * @throws If the expected value is not equal to the stream value.
+ * @throws If the callback function throws an error.
  *
  * @example
- * const stream = pino.test.sink()
+ * const stream = pinoTest.sink()
  * const logger = pino(stream)
+ * 
  * logger.info('hello world')
  * logger.info('hi world')
- * const expected = [
+ * 
+ * const expecteds = [
  *   { msg: 'hello world', level: 30 },
- *   { msg: 'hi world', level: 30 }
+ *   (log) => assert.strictEqual(log.msg, 'hi world')
  * ]
- * await pino.test.consecutive(stream, expected)
+ * await pinoTest.consecutive(stream, expecteds)
  */
-declare function consecutive(stream: Transform, expected: object[], assert?: typeof deepStrictEqual): Promise<void>
+declare function consecutive(stream: Transform, expectedsOrCallbacks: Array<object | Function>, assert?: typeof deepStrictEqual): Promise<void>
 
 export { consecutive, once, sink };

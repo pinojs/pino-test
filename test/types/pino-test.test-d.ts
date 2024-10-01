@@ -19,4 +19,7 @@ expectError(pinoTest.consecutive(stream, { msg: '', level: 30 }))
 expectError(pinoTest.once(stream, ''))
 
 expectType<Promise<void>>(pinoTest.once(stream, { msg: '', level: 30 }))
+expectType<Promise<void>>(pinoTest.once(stream, (received: any) => received.msg === 'hello world'))
+
 expectType<Promise<void>>(pinoTest.consecutive(stream, [{ msg: '', level: 30 }]))
+expectType<Promise<void>>(pinoTest.consecutive(stream, [{ msg: '', level: 30 }, (received: any) => received.msg === 'hi world']))
