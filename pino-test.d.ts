@@ -15,9 +15,9 @@ declare function sink({ destroyOnError, emitErrorEvent }?: { destroyOnError?: bo
 /**
  * Assert that a single log is expected.
  *
- * @param {import('node:stream').Transform} stream The stream to be tested.
+ * @param {Transform} stream The stream to be tested.
  * @param {object | Function} expectedOrCallback The expected value to be tested or a callback function to assert the log.
- * @param {Function} [assert=nodeAssert.deepStrictEqual] The assert function to be used when the expectedOrCallback parameter is an object.
+ * @param {Function} [assert=deepStrictEqual] The assert function to be used when the expectedOrCallback parameter is an object.
  *
  * @returns A promise that resolves when the expected value is equal to the stream value.
  * @throws If the expected value is not equal to the stream value.
@@ -43,9 +43,9 @@ declare function once(stream: Transform, expectedOrCallback: object | Function, 
 /**
  * Assert that consecutive logs are expected.
  *
- * @param {import('node:stream').Transform} stream The stream to be tested.
+ * @param {Transform} stream The stream to be tested.
  * @param {Array<object | Function>} expectedsOrCallbacks The array of expected values to be tested or callback functions.
- * @param {Function} [assert=nodeAssert.deepStrictEqual] The assert function to be used when the expectedOrCallback parameter is an object.
+ * @param {Function} [assert=deepStrictEqual] The assert function to be used when the expectedOrCallback parameter is an object.
  *
  * @returns A promise that resolves when the expected value is equal to the stream value.
  * @throws If the expected value is not equal to the stream value.
