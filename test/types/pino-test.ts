@@ -10,12 +10,13 @@ logger.info('by world')
 async function onceType() {
     const expected = { msg: 'hello world', level: 30 }
     await pinoTest.once(stream, expected)
+    await pinoTest.once(stream, (received: any) => received.msg === 'hello world')
 }
 
 async function consecutiveType() {
     const expected = [
         { msg: 'hello world', level: 30 },
-        { msg: 'hi world', level: 30 }
+        (received: any) => received.msg === 'hi world'
     ]
     await pinoTest.consecutive(stream, expected)
 }

@@ -30,44 +30,58 @@ function sink ({ destroyOnError = false, emitErrorEvent = false } = {}) {
  * Check if the chunk is equal to the expected value.
  *
  * @param {object} chunk The chunk to be tested.
- * @param {object} expected The expected value to be tested.
- * @param {function} assert The assert function to be used.
+ * @param {object | Function} expectedOrCallback The expected value to be tested or a callback function to be used.
+ * @param {Function} assert The assert function to be used when the expectedOrCallback parameter is an object.
  *
  * @throws If the expected value is not equal to the chunk value.
  */
-function check (chunk, expected, assert) {
+function check (chunk, expectedOrCallback, assert) {
   const { time, pid, hostname, ...chunkCopy } = chunk
 
   nodeAssert.strictEqual(new Date(time) <= new Date(), true, 'time is greater than Date.now()')
   nodeAssert.strictEqual(pid, process.pid)
   nodeAssert.strictEqual(hostname, os.hostname())
-  assert(chunkCopy, expected)
+
+  if (typeof expectedOrCallback === 'function') {
+    expectedOrCallback(chunkCopy)
+  } else {
+    assert(chunkCopy, expectedOrCallback)
+  }
 }
 
 /**
  * Assert that a single log is expected.
  *
  * @param {import('node:stream').Transform} stream The stream to be tested.
- * @param {object} expected The expected value to be tested.
- * @param {function} [assert=nodeAssert.deepStrictEqual] The assert function to be used.
+ * @param {object | Function} expectedOrCallback The expected value to be tested or a callback function to assert the log.
+ * @param {Function} [assert=nodeAssert.deepStrictEqual] The assert function to be used when the expectedOrCallback parameter is an object.
  *
  * @returns A promise that resolves when the expected value is equal to the stream value.
  * @throws If the expected value is not equal to the stream value.
+ * @throws If the the callback function throws an error.
  *
  * @example
- * const stream = pino.test.sink()
+ * const stream = pinoTest.sink()
  * const logger = pino(stream)
+ *
  * logger.info('hello world')
+ *
  * const expected = { msg: 'hello world', level: 30 }
- * await pino.test.once(stream, expected)
+ * await pinoTest.once(stream, expected)
+ *
+ * logger.info('hello world 1')
+ *
+ * await pinoTest.once(stream, (log) => {
+ *  assert.strictEqual(log.msg, 'hello world 1')
+ * })
  */
-async function once (stream, expected, assert = nodeAssert.deepStrictEqual) {
+async function once (stream, expectedOrCallback, assert = nodeAssert.deepStrictEqual) {
   return new Promise((resolve, reject) => {
     const dataHandler = (data) => {
       stream.removeListener('error', reject)
       stream.removeListener('data', dataHandler)
       try {
-        check(data, expected, assert)
+        check(data, expectedOrCallback, assert)
         resolve()
       } catch (err) {
         reject(err)
@@ -82,32 +96,35 @@ async function once (stream, expected, assert = nodeAssert.deepStrictEqual) {
  * Assert that consecutive logs are expected.
  *
  * @param {import('node:stream').Transform} stream The stream to be tested.
- * @param {object} expected The expected value to be tested.
- * @param {function} [assert=nodeAssert.deepStrictEqual] The assert function to be used.
+ * @param {Array<object | Function>} expectedsOrCallbacks The array of expected values to be tested or callback functions.
+ * @param {Function} [assert=nodeAssert.deepStrictEqual] The assert function to be used when the expectedOrCallback parameter is an object.
  *
  * @returns A promise that resolves when the expected value is equal to the stream value.
  * @throws If the expected value is not equal to the stream value.
+ * @throws If the callback function throws an error.
  *
  * @example
- * const stream = pino.test.sink()
+ * const stream = pinoTest.sink()
  * const logger = pino(stream)
+ *
  * logger.info('hello world')
  * logger.info('hi world')
- * const expected = [
+ *
+ * const expecteds = [
  *   { msg: 'hello world', level: 30 },
- *   { msg: 'hi world', level: 30 }
+ *   (log) => assert.strictEqual(log.msg, 'hi world')
  * ]
- * await pino.test.consecutive(stream, expected)
+ * await pinoTest.consecutive(stream, expecteds)
  */
-async function consecutive (stream, expected, assert = nodeAssert.deepStrictEqual) {
+async function consecutive (stream, expectedOrCallbacks, assert = nodeAssert.deepStrictEqual) {
   let i = 0
   for await (const chunk of stream) {
-    check(chunk, expected[i], assert)
+    check(chunk, expectedOrCallbacks[i], assert)
     i++
-    if (i === expected.length) break
+    if (i === expectedOrCallbacks.length) break
   }
 
-  if (i < expected.length) {
+  if (i < expectedOrCallbacks.length) {
     throw new Error('Stream ended before all expected logs were received')
   }
 }
