@@ -108,7 +108,7 @@ stream.on('error', (err) => {
 })
 ```
 <a id="once"></a>
-### `once(stream, expected, is) => Promise<void>`
+### `once(stream, expectedOrCallback, is) => Promise<void>`
 Assert that a single log is expected.
 The function internally
 - assert log message `time` is less than or equal to the current time
@@ -143,9 +143,14 @@ function is (received, expected, msg) {
 
 await pinoTest.once(stream, expected, is) // doesn't throw an error
 await pinoTest.once(stream, { msg: 'bye world', level: 30 }, is) // throw an error
+
+// OR using a custom callback
+await pinoTest.once(stream, (received) => {
+  assert.strictEqual(received.msg, 'hello world')
+})
 ```
 <a id="consecutive"></a>
-### `consecutive(stream, expected, is) => Promise<void>`
+### `consecutive(stream, expectedOrCallbacks, is) => Promise<void>`
 Assert that consecutive logs are expected.
 The function internally
 - assert log message `time` is less than or equal to the current time
@@ -188,4 +193,12 @@ function is (received, expected, msg) {
 
 await pinoTest.consecutive(stream, expected, is) // doesn't throw an error
 await pinoTest.consecutive(stream, [{ msg: 'bye world', level: 30 }], is) // throw an error
+
+// OR using a custom callback
+await pinoTest.consecutive(stream, [
+  { msg: 'hello world', level: 30 },
+  (received) => {
+    assert.strictEqual(received.msg, 'hi world')
+  }
+])
 ```
