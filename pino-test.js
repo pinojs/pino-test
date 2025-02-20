@@ -4,6 +4,8 @@ const nodeAssert = require('assert')
 const os = require('os')
 const split = require('split2')
 
+const DEFAULT_WAIT_FOR_TIMEOUT = 1000
+
 /**
  * Create a Pino destination stream to easily inspect the logs processed by Pino.
  *
@@ -127,6 +129,33 @@ async function consecutive (stream, expectedOrCallbacks, assert = nodeAssert.dee
   if (i < expectedOrCallbacks.length) {
     throw new Error('Stream ended before all expected logs were received')
   }
+}
+
+/**
+ * Assert a specific log is expected, ignoring the rest.
+ *
+ * @param {import('node:stream').Transform} stream The stream to be tested.
+ * @param {Array<object | Function>} expectedsOrCallbacks The array of expected values to be tested or callback functions.
+ * @param {Function} [assert=nodeAssert.deepStrictEqual] The assert function to be used when the expectedOrCallback parameter is an object.
+ * @param {Number} [timeout=1000] The time in milliseconds to wait for the expected value.
+ *
+ * @returns A promise that resolves when the expected value is equal to the stream value.
+ * @throws If the expected value is not equal to the stream value.
+ * @throws If the callback function throws an error.
+ * @throws If timeout is reached.
+ *
+ * @example
+ * const stream = pinoTest.sink()
+ * const logger = pino(stream)
+ *
+ * logger.debug('setting up server')
+ * logger.info('server started')
+ * logger.error('server crashed')
+ *
+ * await pinoTest.waitFor(stream, { msg: 'server started', level: 30 })
+ */
+async function waitFor (stream, expectedOrCallbacks, assert = nodeAssert.deepStrictEqual, timeout = DEFAULT_WAIT_FOR_TIMEOUT) {
+  // TODO implementation
 }
 
 module.exports = { sink, once, consecutive }
