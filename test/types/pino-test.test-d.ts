@@ -1,6 +1,6 @@
-import { Transform } from 'node:stream';
-import { expectError, expectType } from 'tsd';
-import pinoTest from '../../pino-test';
+import { Transform } from 'node:stream'
+import { expectError, expectType } from 'tsd'
+import pinoTest from '../../pino-test'
 
 const stream = pinoTest.sink()
 

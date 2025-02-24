@@ -1,5 +1,5 @@
-import type { deepStrictEqual } from "assert";
-import type { Transform } from "stream";
+import type { deepStrictEqual } from 'assert'
+import type { Transform } from 'stream'
 
 /**
  * Create a Pino destination stream to easily inspect the logs processed by Pino.
@@ -10,7 +10,7 @@ import type { Transform } from "stream";
  *
  * @returns A stream.
  */
-declare function sink({ destroyOnError, emitErrorEvent }?: { destroyOnError?: boolean, emitErrorEvent?: boolean }): Transform
+declare function sink ({ destroyOnError, emitErrorEvent }?: { destroyOnError?: boolean, emitErrorEvent?: boolean }): Transform
 
 /**
  * Assert that a single log is expected.
@@ -26,19 +26,19 @@ declare function sink({ destroyOnError, emitErrorEvent }?: { destroyOnError?: bo
  * @example
  * const stream = pinoTest.sink()
  * const logger = pino(stream)
- * 
+ *
  * logger.info('hello world')
- * 
+ *
  * const expected = { msg: 'hello world', level: 30 }
  * await pinoTest.once(stream, expected)
- * 
+ *
  * logger.info('hello world 1')
- * 
+ *
  * await pinoTest.once(stream, (log) => {
  *  assert.strictEqual(log.msg, 'hello world 1')
  * })
  */
-declare function once(stream: Transform, expectedOrCallback: object | Function, assert?: typeof deepStrictEqual): Promise<void>
+declare function once (stream: Transform, expectedOrCallback: object | Function, assert?: typeof deepStrictEqual): Promise<void>
 
 /**
  * Assert that consecutive logs are expected.
@@ -54,16 +54,16 @@ declare function once(stream: Transform, expectedOrCallback: object | Function, 
  * @example
  * const stream = pinoTest.sink()
  * const logger = pino(stream)
- * 
+ *
  * logger.info('hello world')
  * logger.info('hi world')
- * 
+ *
  * const expecteds = [
  *   { msg: 'hello world', level: 30 },
  *   (log) => assert.strictEqual(log.msg, 'hi world')
  * ]
  * await pinoTest.consecutive(stream, expecteds)
  */
-declare function consecutive(stream: Transform, expectedsOrCallbacks: Array<object | Function>, assert?: typeof deepStrictEqual): Promise<void>
+declare function consecutive (stream: Transform, expectedsOrCallbacks: Array<object | Function>, assert?: typeof deepStrictEqual): Promise<void>
 
-export { consecutive, once, sink };
+export { consecutive, once, sink }
