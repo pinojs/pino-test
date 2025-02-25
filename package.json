@@ -35,18 +35,14 @@
     "split2": "^4.2.0"
   },
   "devDependencies": {
-    "@fastify/pre-commit": "^2.1.0",
-    "@types/node": "^20.11.25",
-    "eslint": "^8.57.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^6.1.1",
-    "pino": "^8.19.0",
+    "@fastify/pre-commit": "^2.2.0",
+    "@types/node": "^22.13.5",
+    "eslint": "^9.21.0",
+    "neostandard": "^0.12.1",
+    "pino": "^9.6.0",
     "ts-node": "^10.9.2",
-    "tsd": "^0.30.7",
-    "typescript": "^5.4.2"
+    "tsd": "^0.31.2",
+    "typescript": "^5.7.3"
   },
   "tsd": {
     "directory": "test/types"
