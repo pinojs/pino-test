@@ -45,6 +45,7 @@ test('pino should log a info message using a own assert function', async () => {
 * [sink()](#sink)
 * [once()](#once)
 * [consecutive()](#consecutive)
+* [waitFor()](#waitfor)
 
 <a id="sink"></a>
 ### `pinoTest.sink({ destroyOnError = false, emitErrorEvent = false }) => Transform`
@@ -201,4 +202,85 @@ await pinoTest.consecutive(stream, [
     assert.strictEqual(received.msg, 'hi world')
   }
 ])
+```
+
+<a id="waitfor"></a>
+### `waitFor(stream, expectedOrCallbacks, assertOrOptions, options) => Promise<void>`
+Assert a specific log is expected while ignoring other logs, with support for timeouts and message limits.
+The function internally
+- assert log message `time` is less than or equal to the current time
+- assert log message `pid` matches the current process id
+- assert log message `hostname` matches the current hostname
+- uses the default `deepStrictEqual` assert function of the `node:assert` module
+
+#### Parameters
+- `stream`: The Pino destination stream to monitor
+- `expectedOrCallbacks`: Expected log object or callback function
+- `assertOrOptions`: (optional) Either a custom assert function or options object
+- `options`: (optional) Additional options when using a custom assert function
+
+#### Options
+- `maxMessages`: (default: 100) Maximum number of messages to process before failing
+- `timeout`: (default: 1000) Time in milliseconds to wait before failing
+- `debug`: (default: false) Enable debug logging of received messages
+
+```js
+const pino = require('pino')
+const pinoTest = require('pino-test')
+
+const stream = pinoTest.sink()
+const logger = pino(stream)
+
+// Basic usage with default options
+logger.debug('setup')
+logger.info('server started')
+logger.error('error occurred')
+await pinoTest.waitFor(stream, { msg: 'server started', level: 30 })
+
+// With custom maxMessages limit
+await pinoTest.waitFor(stream, expected, { maxMessages: 5 })
+
+// With all options
+await pinoTest.waitFor(stream, expected, {
+  maxMessages: 5,
+  timeout: 2000,
+  debug: true
+})
+
+// With custom assert function
+function is(received, expected) {
+  if (received.msg !== expected.msg) {
+    throw new Error(`expected msg ${expected.msg} doesn't match the received one ${received.msg}`)
+  }
+}
+await pinoTest.waitFor(stream, expected, is)
+
+// With custom assert and options
+await pinoTest.waitFor(stream, expected, is, {
+  maxMessages: 5,
+  timeout: 2_000
+})
+
+// With callback function
+await pinoTest.waitFor(stream, (received) => {
+  assert.strictEqual(received.msg, 'server started')
+})
+
+// With callback function and options
+await pinoTest.waitFor(stream, (received) => {
+  assert.strictEqual(received.msg, 'server started')
+}, { maxMessages: 5 })
+
+// Error handling
+try {
+  await pinoTest.waitFor(stream, expected, { timeout: 100 })
+} catch (err) {
+  console.log(err.message) // "Timeout on waitFor: expected message"
+}
+
+try {
+  await pinoTest.waitFor(stream, expected, { maxMessages: 2 })
+} catch (err) {
+  console.log(err.message) // "Max message count reached on waitFor: expected message"
+}
 ```

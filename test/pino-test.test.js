@@ -399,3 +399,150 @@ describe('consecutive', () => {
     )
   })
 })
+
+describe('waitFor', () => {
+  test('should wait for the expected log message with default options', async () => {
+    const stream = pinoTest.sink()
+    const instance = pino(stream)
+
+    setTimeout(() => {
+      instance.info('hello world')
+    }, 100)
+
+    const expected = { msg: 'hello world', level: 30 }
+
+    await pinoTest.waitFor(stream, expected)
+  })
+
+  test('should wait for the expected log message with custom assert function', async () => {
+    const stream = pinoTest.sink()
+    const instance = pino(stream)
+
+    setTimeout(() => {
+      instance.info('hello world')
+    }, 100)
+
+    const expected = { msg: 'hello world', level: 30 }
+
+    await pinoTest.waitFor(stream, expected, (message) => {
+      console.log('waitFor assert', message)
+      assert.strictEqual(message.msg, 'hello world')
+      assert.strictEqual(message.level, 30)
+    })
+  })
+
+  test('should wait for the expected log message with custom assert function and max messages', async () => {
+    const stream = pinoTest.sink()
+    const instance = pino(stream)
+
+    setTimeout(() => {
+      instance.info('1')
+      instance.info('2')
+      instance.info('3')
+    }, 100)
+
+    const expected = { msg: '3', level: 30 }
+
+    await pinoTest.waitFor(stream, expected, { maxMessages: 3 })
+  })
+
+  test('should wait with options object containing all parameters', async () => {
+    const stream = pinoTest.sink()
+    const instance = pino(stream)
+
+    setTimeout(() => {
+      instance.info('test message')
+    }, 100)
+
+    const expected = { msg: 'test message', level: 30 }
+    await pinoTest.waitFor(stream, expected, {
+      maxMessages: 5,
+      timeout: 2000,
+      debug: true
+    })
+  })
+
+  test('should use custom assert with additional options', async () => {
+    const stream = pinoTest.sink()
+    const instance = pino(stream)
+    const customAssert = mock.fn(is)
+
+    setTimeout(() => {
+      instance.info('test message')
+    }, 100)
+
+    const expected = { msg: 'test message', level: 30 }
+    await pinoTest.waitFor(stream, expected, customAssert, {
+      maxMessages: 5,
+      timeout: 2000
+    })
+
+    assert.strictEqual(customAssert.mock.calls.length, 1)
+  })
+
+  test('should reject on timeout', async () => {
+    const stream = pinoTest.sink()
+    const instance = pino(stream)
+
+    setTimeout(() => {
+      instance.info('test message')
+    }, 2000)
+
+    const expected = { msg: 'test message', level: 30 }
+    await assert.rejects(
+      pinoTest.waitFor(stream, expected, { timeout: 100 }),
+      /Timeout on waitFor: test message/
+    )
+  })
+
+  test('should reject on max messages exceeded', async () => {
+    const stream = pinoTest.sink()
+    const instance = pino(stream)
+
+    setTimeout(() => {
+      instance.info('message 1')
+      instance.info('message 2')
+      instance.info('message 3')
+    }, 100)
+
+    const expected = { msg: 'different message', level: 30 }
+    await assert.rejects(
+      pinoTest.waitFor(stream, expected, { maxMessages: 2 }),
+      /Max message count reached on waitFor: different message/
+    )
+  })
+
+  test('should log debug messages when debug option is true', async () => {
+    const stream = pinoTest.sink()
+    const instance = pino(stream)
+    const originalConsoleLog = console.log
+    const logs = []
+
+    console.log = (...args) => {
+      logs.push(args)
+    }
+
+    setTimeout(() => {
+      instance.info('debug test')
+    }, 100)
+
+    const expected = { msg: 'debug test', level: 30 }
+    await pinoTest.waitFor(stream, expected, { debug: true })
+
+    console.log = originalConsoleLog
+    assert.ok(logs.some(log => log[0] === 'waitFor received'))
+  })
+
+  test('should handle function matcher with options', async () => {
+    const stream = pinoTest.sink()
+    const instance = pino(stream)
+
+    setTimeout(() => {
+      instance.info('function test')
+    }, 100)
+
+    await pinoTest.waitFor(stream, (received) => {
+      assert.strictEqual(received.msg, 'function test')
+    }, { maxMessages: 5 })
+  })
+})
