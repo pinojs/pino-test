@@ -8,9 +8,9 @@ npm install pino-test --save-dev
 ```
 
 ```js
-const test = require('node:test')
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import { test } from 'node:test'
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 test('pino should log a info message', async () => {
   const stream = pinoTest.sink()
@@ -52,8 +52,8 @@ test('pino should log a info message using a own assert function', async () => {
 Create a Pino destination stream to easily inspect the logs processed by Pino.
 
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink()
 const logger = pino(stream)
@@ -67,8 +67,8 @@ stream.once('data', (data) => {
 ```
 Destroy the stream on error
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink({ destroyOnError: true })
 stream.write('helloworld')
@@ -80,8 +80,8 @@ stream.once('close', () => {
 ```
 Destroy and send error event on error
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink({ destroyOnError = false, emitErrorEvent = false })
 stream.write('helloworld')
@@ -97,8 +97,8 @@ stream.on('close', () => {
 ```
 Send error event on error
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink({ emitErrorEvent = false })
 stream.write('helloworld')
@@ -118,8 +118,8 @@ The function internally
 - uses the default `deepStrictEqual` assert function of the `node:assert` module.
 
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink()
 const logger = pino(stream)
@@ -160,8 +160,8 @@ The function internally
 - uses the default `deepStrictEqual` assert function of the `node:assert` module.
 
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink()
 const logger = pino(stream)
@@ -225,8 +225,8 @@ The function internally
 - `debug`: (default: false) Enable debug logging of received messages
 
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink()
 const logger = pino(stream)
