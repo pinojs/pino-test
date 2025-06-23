@@ -59,7 +59,7 @@ const logger = pino(stream)
 
 logger.info('hello world')
 
-stream.once('data', (data) => {
+stream.once('data', (chunk) => {
   console.log(chunk.msg) // 'hello world'
   console.log(chunk.level) // 30
 })
