@@ -82,7 +82,7 @@ Destroy and send error event on error
 const pino = require('pino')
 const pinoTest = require('pino-test')
 
-const stream = pinoTest.sink({ destroyOnError = false, emitErrorEvent = false })
+const stream = pinoTest.sink({ destroyOnError: false, emitErrorEvent: false })
 stream.write('helloworld')
 stream.end()
 
@@ -99,7 +99,7 @@ Send error event on error
 const pino = require('pino')
 const pinoTest = require('pino-test')
 
-const stream = pinoTest.sink({ emitErrorEvent = false })
+const stream = pinoTest.sink({ emitErrorEvent: false })
 stream.write('helloworld')
 stream.end()
 
