@@ -4,6 +4,9 @@ const nodeAssert = require('assert')
 const os = require('os')
 const split = require('split2')
 
+const DEFAULT_WAIT_FOR_TIMEOUT = 1_000
+const DEFAULT_WAIT_FOR_MAX_MESSAGES = 100
+
 /**
  * Create a Pino destination stream to easily inspect the logs processed by Pino.
  *
@@ -49,6 +52,19 @@ function check (chunk, expectedOrCallback, assert) {
   }
 }
 
+function listen (stream, onData, onError) {
+  stream.on('data', onData)
+  stream.on('error', onError)
+  stream.resume()
+}
+
+function unlisten (stream, onData, onError) {
+  stream.removeListener('data', onData)
+  stream.removeListener('error', onError)
+  // A flowing stream with no data listener drops its logs, so keep them for the next call.
+  if (stream.listenerCount('data') === 0) stream.pause()
+}
+
 /**
  * Assert that a single log is expected.
  *
@@ -77,9 +93,12 @@ function check (chunk, expectedOrCallback, assert) {
  */
 async function once (stream, expectedOrCallback, assert = nodeAssert.deepStrictEqual) {
   return new Promise((resolve, reject) => {
-    const dataHandler = (data) => {
-      stream.removeListener('error', reject)
-      stream.removeListener('data', dataHandler)
+    const onError = (err) => {
+      unlisten(stream, onData, onError)
+      reject(err)
+    }
+    const onData = (data) => {
+      unlisten(stream, onData, onError)
       try {
         check(data, expectedOrCallback, assert)
         resolve()
@@ -87,8 +106,7 @@ async function once (stream, expectedOrCallback, assert = nodeAssert.deepStrictE
         reject(err)
       }
     }
-    stream.once('error', reject)
-    stream.once('data', dataHandler)
+    listen(stream, onData, onError)
   })
 }
 
@@ -129,4 +147,45 @@ async function consecutive (stream, expectedOrCallbacks, assert = nodeAssert.dee
   }
 }
 
-module.exports = { sink, once, consecutive }
+/** Wait for a log that matches and ignore the others. Concurrent calls each receive every log. */
+async function waitFor (stream, expectedOrCallback, assert = nodeAssert.deepStrictEqual, options = {}) {
+  if (typeof assert !== 'function') {
+    options = assert
+    assert = nodeAssert.deepStrictEqual
+  }
+  const { timeout = DEFAULT_WAIT_FOR_TIMEOUT, maxMessages = DEFAULT_WAIT_FOR_MAX_MESSAGES } = options
+
+  return new Promise((resolve, reject) => {
+    let received = 0
+    let lastError
+
+    const settle = (err) => {
+      clearTimeout(timer)
+      unlisten(stream, onData, settle)
+      if (err) reject(err)
+      else resolve()
+    }
+
+    const onData = (data) => {
+      received++
+      try {
+        check(data, expectedOrCallback, assert)
+        settle()
+        return
+      } catch (err) {
+        lastError = err
+      }
+      if (received === maxMessages) {
+        settle(new Error(`Max message count reached on waitFor, no match in ${received} logs`, { cause: lastError }))
+      }
+    }
+
+    const timer = setTimeout(() => {
+      settle(new Error(`Timeout on waitFor after ${timeout} ms, no match in ${received} logs`, { cause: lastError }))
+    }, timeout)
+
+    listen(stream, onData, settle)
+  })
+}
+
+module.exports = { sink, once, consecutive, waitFor }

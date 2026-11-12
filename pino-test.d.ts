@@ -66,4 +66,13 @@ declare function once (stream: Transform, expectedOrCallback: object | Function,
  */
 declare function consecutive (stream: Transform, expectedsOrCallbacks: Array<object | Function>, assert?: typeof deepStrictEqual): Promise<void>
 
-export { consecutive, once, sink }
+interface WaitForOptions {
+  timeout?: number
+  maxMessages?: number
+}
+
+/** Wait for a log that matches and ignore the others. Concurrent calls each receive every log. */
+declare function waitFor (stream: Transform, expectedOrCallback: object | Function, options?: WaitForOptions): Promise<void>
+declare function waitFor (stream: Transform, expectedOrCallback: object | Function, assert?: typeof deepStrictEqual, options?: WaitForOptions): Promise<void>
+
+export { consecutive, once, sink, waitFor }
