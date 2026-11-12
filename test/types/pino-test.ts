@@ -23,6 +23,11 @@ async function consecutiveType() {
   await pinoTest.consecutive(stream, expected)
 }
 
+async function waitForType() {
+  await pinoTest.waitFor(stream, { msg: 'hello world', level: 30 })
+  await pinoTest.waitFor(stream, (received: any) => received.msg === 'by world', { timeout: 50, maxMessages: 2 })
+}
+
 const stream1 = pinoTest.sink({ emitErrorEvent: true })
 const stream2 = pinoTest.sink({ destroyOnError: true })
 const stream3 = pinoTest.sink({ emitErrorEvent: true, destroyOnError: true })

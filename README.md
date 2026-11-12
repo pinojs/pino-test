@@ -8,9 +8,9 @@ npm install pino-test --save-dev
 ```
 
 ```js
-const test = require('node:test')
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import { test } from 'node:test'
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 test('pino should log a info message', async () => {
   const stream = pinoTest.sink()
@@ -45,14 +45,15 @@ test('pino should log a info message using a own assert function', async () => {
 * [sink()](#sink)
 * [once()](#once)
 * [consecutive()](#consecutive)
+* [waitFor()](#waitfor)
 
 <a id="sink"></a>
 ### `pinoTest.sink({ destroyOnError = false, emitErrorEvent = false }) => Transform`
 Create a Pino destination stream to easily inspect the logs processed by Pino.
 
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink()
 const logger = pino(stream)
@@ -66,8 +67,8 @@ stream.once('data', (chunk) => {
 ```
 Destroy the stream on error
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink({ destroyOnError: true })
 stream.write('helloworld')
@@ -79,8 +80,8 @@ stream.once('close', () => {
 ```
 Destroy and send error event on error
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink({ destroyOnError: false, emitErrorEvent: false })
 stream.write('helloworld')
@@ -96,8 +97,8 @@ stream.on('close', () => {
 ```
 Send error event on error
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink({ emitErrorEvent: false })
 stream.write('helloworld')
@@ -117,8 +118,8 @@ The function internally
 - uses the default `deepStrictEqual` assert function of the `node:assert` module.
 
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink()
 const logger = pino(stream)
@@ -159,8 +160,8 @@ The function internally
 - uses the default `deepStrictEqual` assert function of the `node:assert` module.
 
 ```js
-const pino = require('pino')
-const pinoTest = require('pino-test')
+import pino from 'pino'
+import pinoTest from 'pino-test'
 
 const stream = pinoTest.sink()
 const logger = pino(stream)
@@ -201,4 +202,69 @@ await pinoTest.consecutive(stream, [
     assert.strictEqual(received.msg, 'hi world')
   }
 ])
+```
+<a id="waitfor"></a>
+### `waitFor(stream, expectedOrCallback, is, { timeout = 1000, maxMessages = 100 }) => Promise<void>`
+Wait for a log that is expected, and ignore the logs that do not match.
+The third parameter is optional: pass the options in its place to use the default assert function.
+The function internally
+- assert log message `time` is less than or equal to the current time
+- assert log message `pid` matches the current process id
+- assert log message `hostname` matches the current hostname
+- uses the default `deepStrictEqual` assert function of the `node:assert` module.
+
+Options
+- `timeout`: the time in milliseconds to wait for a matching log.
+- `maxMessages`: the maximum number of logs to read, the matching log included.
+
+The promise rejects when no log matches before `timeout` or in `maxMessages` logs, with the last assert error as `cause`.
+It also rejects when the stream emits an error.
+
+Concurrent calls on the same stream each receive every log.
+The logs written while no `waitFor` or `once` call is pending stay in the stream for the next call.
+
+```js
+import pino from 'pino'
+import pinoTest from 'pino-test'
+
+const stream = pinoTest.sink()
+const logger = pino(stream)
+
+logger.debug('setting up server')
+logger.info('server started')
+
+await pinoTest.waitFor(stream, { msg: 'server started', level: 30 }) // ignores the debug log
+
+// OR with a log that is written later
+setTimeout(() => logger.info('server stopped'), 100)
+await pinoTest.waitFor(stream, { msg: 'server stopped', level: 30 })
+
+// OR with options
+await pinoTest.waitFor(stream, { msg: 'server started', level: 30 }, { timeout: 2000, maxMessages: 5 })
+
+// OR using a custom assert function, and options
+function is (received, expected, msg) {
+  if (received.msg !== expected.msg) {
+    throw new Error(`expected msg ${expected.msg} doesn't match the received one ${received.msg}`)
+  }
+}
+
+await pinoTest.waitFor(stream, { msg: 'server started' }, is, { timeout: 2000 })
+
+// OR using a custom callback
+await pinoTest.waitFor(stream, (received) => {
+  assert.strictEqual(received.msg, 'server started')
+})
+
+// OR with concurrent calls
+logger.info('client connected')
+logger.info('client disconnected')
+await Promise.all([
+  pinoTest.waitFor(stream, { msg: 'client disconnected', level: 30 }),
+  pinoTest.waitFor(stream, { msg: 'client connected', level: 30 })
+])
+
+// rejects when no log matches
+await pinoTest.waitFor(stream, { msg: 'server crashed', level: 50 }, { timeout: 100 })
+// Error: Timeout on waitFor after 100 ms, no match in 0 logs
 ```
